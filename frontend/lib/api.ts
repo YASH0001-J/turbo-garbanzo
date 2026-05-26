@@ -1,6 +1,11 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_URL = 'https://zym-backend-2h03.onrender.com';
+const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://zym-backend-2h03.onrender.com';
+// Ensure we point to the backend API mount (/api)
+// If RAW_API_URL already points to the API mount (e.g. '/api' or ends with '/api'), use it directly
+const API_URL = RAW_API_URL.replace(/\/$/, '').endsWith('/api')
+  ? RAW_API_URL.replace(/\/$/, '')
+  : RAW_API_URL.replace(/\/$/, '') + '/api';
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
