@@ -7,8 +7,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+// CORS: allow local dev and the deployed frontend (set FRONTEND_URL in env to override)
+const allowedOrigins = [process.env.FRONTEND_URL, 'https://turbo-garbanzo-sigma.vercel.app'].filter(Boolean);
 app.use(cors({
-  origin: process.env.FRONTEND_URL || /^http:\/\/localhost:\d{4}$/,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // allow non-browser clients like curl/postman
+    if (allowedOrigins.includes(origin) || /^http:\/\/localhost:\d{4}$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS policy: origin not allowed'));
+  },
   credentials: true,
 }));
 app.use(express.json());
