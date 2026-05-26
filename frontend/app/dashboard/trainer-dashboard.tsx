@@ -11,7 +11,7 @@ export function TrainerDashboard() {
 
   const trainerStats = [
     { label: 'Assigned Members', value: '28', icon: '👥', color: 'bg-blue-50' },
-    { label: "Today's Sessions", value: '6', icon: '📅', color: 'bg-green-50' },
+    { label: "Today&apos;s Sessions", value: '6', icon: '📅', color: 'bg-green-50' },
     { label: 'Active Members', value: '24', icon: '✅', color: 'bg-purple-50' },
     { label: 'Total Experience', value: '8 Years', icon: '⭐', color: 'bg-yellow-50' },
   ];
@@ -164,8 +164,8 @@ export function TrainerDashboard() {
               {/* Today's Sessions */}
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  📅 Today's Sessions
-                </h3>
+                    📅 Today&apos;s Sessions
+                  </h3>
                 <div className="space-y-3">
                   <div className="p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500">
                     <p className="text-sm font-medium text-gray-900">John Doe - 09:00 AM</p>

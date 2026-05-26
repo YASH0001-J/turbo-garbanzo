@@ -164,7 +164,7 @@ export function MemberDashboard() {
               {/* Workout Card */}
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Today's Workout</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Today&apos;s Workout</h3>
                   <span className="text-2xl">🏋️</span>
                 </div>
                 <div className="space-y-2">
@@ -179,7 +179,7 @@ export function MemberDashboard() {
               {/* Diet Card */}
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Today's Diet</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Today&apos;s Diet</h3>
                   <span className="text-2xl">🥗</span>
                 </div>
                 <div className="space-y-2">
