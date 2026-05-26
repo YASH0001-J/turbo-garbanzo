@@ -30,7 +30,16 @@ export function withProtectedRoute(Component: React.ComponentType<any>) {
     if (!user) {
       return null;
     }
+// make it main and the seem to be same as the life of the nae
+ //start//
 
+
+ //end//
     return <Component {...props} />;
   };
 }
+
+// JS copil with the code not just be seen in the js fileand 
+// API1  = SET FOR THE BACKEND 
+// API2 = Set for the frontend js is 
+

@@ -34,10 +34,12 @@ export const connectDB = async () => {
     const connection = await pool.getConnection();
     console.log('✅ Connected to MySQL Database');
     connection.release();
+    return true;
   } catch (error) {
     console.error('❌ Database Connection Error:', error.message);
-    console.error('   Start MySQL in XAMPP Control Panel, then run: npm run migrate');
-    process.exit(1);
+    console.error('   Database unavailable. If this is unexpected, check DB credentials and network connectivity.');
+    // Do NOT exit the process here. Return false so the caller can decide how to proceed.
+    return false;
   }
 };
 

@@ -31,13 +31,18 @@ app.use((err, req, res, next) => {
 // Start Server (attempt DB connection but don't crash if unavailable)
 const startServer = async () => {
   try {
-    await connectDB();
-    app.locals.dbConnected = true;
-    console.log('✅ Database connected');
+    const dbOk = await connectDB();
+    if (dbOk) {
+      app.locals.dbConnected = true;
+      console.log('✅ Database connected');
+    } else {
+      app.locals.dbConnected = false;
+      console.warn('⚠️ Database unavailable — continuing without DB.');
+    }
   } catch (err) {
-    // Temporary: do not crash the server if DB is not available (e.g., XAMPP not running)
+    // Unexpected error while attempting to check DB — do not crash the server.
     app.locals.dbConnected = false;
-    console.warn('⚠️ Database connection failed — continuing without DB.');
+    console.warn('⚠️ Unexpected error when checking DB — continuing without DB.');
     console.warn(err && err.message ? err.message : err);
   }
 
@@ -53,7 +58,9 @@ const startServer = async () => {
       console.error('   1. Use that terminal (backend is already up), or');
       console.error('   2. Stop the old process, then run npm run dev again.');
       console.error(`   PowerShell: Get-NetTCPConnection -LocalPort ${PORT} | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`);
-      process.exit(1);
+      // Do NOT exit the process; allow the environment (e.g. Render) to manage restarts.
+      // If the port is in use the server could not start listening — this is informational.
+      return;
     }
     throw err;
   });

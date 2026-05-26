@@ -39,8 +39,9 @@ async function runMigrations() {
     console.log('✅ MySQL database and tables created successfully');
   } catch (error) {
     console.error('❌ Migration failed:', error.message);
-    console.error('   Make sure MySQL is running in XAMPP Control Panel.');
-    process.exit(1);
+    console.error('   Database unavailable. If this is unexpected, check DB credentials and network connectivity.');
+    // Do NOT exit the process here; allow the caller or environment to continue.
+    return false;
   } finally {
     if (connection) await connection.end();
   }
