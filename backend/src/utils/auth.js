@@ -17,12 +17,10 @@ export const comparePassword = async (password, hashedPassword) => {
 };
 
 // Generate JWT Token
-export const generateToken = (userId, role) => {
-  return jwt.sign(
-    { userId, role },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRY }
-  );
+// Generate JWT Token. Accept optional extra payload to support test bypass.
+export const generateToken = (userId, role, extra = {}) => {
+  const payload = { userId, role, ...extra };
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
 };
 
 // Verify JWT Token

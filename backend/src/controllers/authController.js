@@ -36,6 +36,30 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Temporary bypass for DB authentication during deployment testing
+    if (process.env.BYPASS_DB_AUTH === 'true') {
+      const mockId = `mock-${Date.now()}`;
+      const mockName = (email && email.split('@')[0]) || 'Test User';
+      const mockRole = 'member';
+      const mockUser = {
+        id: mockId,
+        name: mockName,
+        email,
+        role: mockRole,
+      };
+
+      const token = generateToken(mockUser.id, mockUser.role, { name: mockUser.name, email: mockUser.email });
+
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: COOKIE_MAX_AGE_MS,
+      });
+
+      return sendSuccess(res, { user: mockUser }, 'Login successful (bypass)');
+    }
+
     // Find user
     const user = await getUserByEmail(email);
     if (!user) {
@@ -75,6 +99,18 @@ export const loginUser = async (req, res) => {
 // Get Current User
 export const getCurrentUser = async (req, res) => {
   try {
+    // If bypassing DB, construct user from token payload
+    if (process.env.BYPASS_DB_AUTH === 'true') {
+      const userFromToken = req.user || {};
+      const mockUser = {
+        id: userFromToken.userId || `mock-${Date.now()}`,
+        name: userFromToken.name || 'Test User',
+        email: userFromToken.email || 'test@example.com',
+        role: userFromToken.role || 'member',
+      };
+      return sendSuccess(res, mockUser);
+    }
+
     const user = await getUserById(req.user.userId);
     if (!user) {
       return sendError(res, 404, 'User not found');
