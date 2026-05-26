@@ -57,7 +57,9 @@ export const loginUser = async (req, res) => {
         maxAge: COOKIE_MAX_AGE_MS,
       });
 
-      return sendSuccess(res, { user: mockUser }, 'Login successful (bypass)');
+      // Also return the token in the response body so deployed frontends
+      // that can't read httpOnly cookies during testing can still use it.
+      return sendSuccess(res, { user: mockUser, token }, 'Login successful (bypass)');
     }
 
     // Find user
