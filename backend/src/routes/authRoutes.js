@@ -1,38 +1,44 @@
 import express from 'express';
-import { body } from 'express-validator';
-import { registerUser, loginUser, getCurrentUser, logoutUser } from '../controllers/authController.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { handleValidationErrors } from '../middleware/validation.js';
 
 const router = express.Router();
 
-// Validation rules
-const registerValidation = [
-  body('name').notEmpty().withMessage('Name is required'),
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('role').isIn(['super_admin', 'gym_owner', 'trainer', 'member']).withMessage('Invalid role'),
-];
+// Deployment-only: completely DB-free login route
+router.post('/login', (req, res) => {
+  // Accept any email/password and return mock response
+  return res.status(200).json({
+    success: true,
+    token: 'mock-token',
+    user: {
+      id: 1,
+      name: 'Test User',
+      email: 'test@example.com',
+      role: 'admin',
+    },
+  });
+});
 
-const loginValidation = [
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('password').notEmpty().withMessage('Password is required'),
-];
+// Deployment-only: completely DB-free register route
+router.post('/register', (req, res) => {
+  // Return a fake created user (no DB operations)
+  const { name, email, role } = req.body || {};
+  const user = {
+    id: 1,
+    name: name || 'Test User',
+    email: email || 'test@example.com',
+    role: role || 'admin',
+  };
+  return res.status(201).json({ success: true, user, token: 'mock-token' });
+});
 
-// Routes
-// If BYPASS_DB_AUTH is enabled, skip validation for register as well
-if (process.env.BYPASS_DB_AUTH === 'true') {
-  router.post('/register', registerUser);
-} else {
-  router.post('/register', registerValidation, handleValidationErrors, registerUser);
-}
-// If BYPASS_DB_AUTH is enabled, accept any credentials (skip validation)
-if (process.env.BYPASS_DB_AUTH === 'true') {
-  router.post('/login', loginUser);
-} else {
-  router.post('/login', loginValidation, handleValidationErrors, loginUser);
-}
-router.get('/me', authenticateToken, getCurrentUser);
-router.post('/logout', authenticateToken, logoutUser);
+// Keep /me and logout using authenticateToken (middleware provides mock user when bypass enabled)
+router.get('/me', authenticateToken, (req, res) => {
+  const u = req.user || { userId: 1, name: 'Test User', email: 'test@example.com', role: 'admin' };
+  return res.json({ success: true, user: { id: u.userId || 1, name: u.name, email: u.email, role: u.role } });
+});
+
+router.post('/logout', authenticateToken, (req, res) => {
+  return res.json({ success: true, message: 'Logged out' });
+});
 
 export default router;
