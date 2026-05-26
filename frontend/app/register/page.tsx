@@ -6,30 +6,30 @@ import { Button } from '@/components/ui/button';
 import {
   authAPI,
   getErrorMessage,
-  isAuthenticated,
-  saveSession,
   type RegisterRequest,
   type UserRole,
 } from '@/lib/auth-service';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/lib/auth-context';
 
 export default function Register() {
   const router = useRouter();
+  const { refetchUser, user, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     role: 'member' as UserRole,
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (!isLoading && user) {
       router.replace('/dashboard');
     }
-  }, [router]);
+  }, [isLoading, user, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -41,7 +41,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
+    setSubmitting(true);
 
     const payload: RegisterRequest = {
       name: formData.name.trim(),
@@ -51,16 +51,21 @@ export default function Register() {
     };
 
     try {
-      const auth = await authAPI.register(payload);
-      saveSession(auth);
+      await authAPI.register(payload);
+      // update auth context before navigating
+      try {
+        await refetchUser();
+      } catch (err) {
+        // ignore verification errors
+      }
       toast.success('Account created successfully!');
-      router.push('/dashboard');
+      router.replace('/dashboard');
     } catch (err) {
       const message = getErrorMessage(err);
       setError(message);
       toast.error(message);
     } finally {
-      setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -150,8 +155,8 @@ export default function Register() {
             </span>
           </label>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? 'Creating account...' : 'Create Account'}
+          <Button type="submit" disabled={submitting} className="w-full">
+            {submitting ? 'Creating account...' : 'Create Account'}
           </Button>
         </form>
 

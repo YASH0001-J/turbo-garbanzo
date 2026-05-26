@@ -1,5 +1,5 @@
 import { createUser, getUserByEmail, getUserById } from '../models/User.js';
-import { comparePassword, generateToken } from '../utils/auth.js';
+import { comparePassword, generateToken, COOKIE_MAX_AGE_MS } from '../utils/auth.js';
 import { sendSuccess, sendError, handleError } from '../utils/errorHandler.js';
 
 // Register User
@@ -17,7 +17,15 @@ export const registerUser = async (req, res) => {
     const user = await createUser(name, email, password, role);
     const token = generateToken(user.id, user.role);
 
-    sendSuccess(res, { token, user }, 'User registered successfully', 201);
+    // Set httpOnly cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: COOKIE_MAX_AGE_MS,
+    });
+
+    sendSuccess(res, { user }, 'User registered successfully', 201);
   } catch (error) {
     handleError(error, res);
   }
@@ -43,8 +51,15 @@ export const loginUser = async (req, res) => {
     // Generate token
     const token = generateToken(user.id, user.role);
 
+    // Set httpOnly cookie for session
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: COOKIE_MAX_AGE_MS,
+    });
+
     sendSuccess(res, {
-      token,
       user: {
         id: user.id,
         name: user.name,

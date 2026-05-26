@@ -23,8 +23,8 @@ export interface User {
 }
 
 export interface AuthData {
-  token: string;
   user: User;
+  token?: string;
 }
 
 interface ApiSuccessResponse<T> {
@@ -46,16 +46,24 @@ export function getErrorMessage(error: unknown): string {
   return 'Something went wrong';
 }
 
-export function saveSession(auth: AuthData): void {
+export function saveUserSession(user: User): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('token', auth.token);
-  localStorage.setItem('user', JSON.stringify(auth.user));
+  localStorage.setItem('user', JSON.stringify(user));
+}
+
+export function saveAuthToken(token: string | undefined): void {
+  if (typeof window === 'undefined') return;
+  if (token) localStorage.setItem('token', token);
 }
 
 export function clearSession(): void {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem('token');
   localStorage.removeItem('user');
+}
+
+export function clearAuthToken(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('token');
 }
 
 export function getStoredUser(): User | null {
@@ -71,18 +79,24 @@ export function getStoredUser(): User | null {
 
 export function isAuthenticated(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!localStorage.getItem('token');
+  return !!getStoredUser();
 }
 
 export const authAPI = {
   register: async (data: RegisterRequest): Promise<AuthData> => {
     const res = await api.post<ApiSuccessResponse<AuthData>>('/auth/register', data);
-    return res.data.data;
+    const payload = res.data.data;
+    saveUserSession(payload.user);
+    saveAuthToken(payload.token);
+    return payload;
   },
 
   login: async (data: LoginRequest): Promise<AuthData> => {
     const res = await api.post<ApiSuccessResponse<AuthData>>('/auth/login', data);
-    return res.data.data;
+    const payload = res.data.data;
+    saveUserSession(payload.user);
+    saveAuthToken(payload.token);
+    return payload;
   },
 
   getMe: () => api.get<ApiSuccessResponse<User>>('/auth/me'),
@@ -92,6 +106,7 @@ export const authAPI = {
       await api.post('/auth/logout');
     } finally {
       clearSession();
+      clearAuthToken();
     }
   },
 };

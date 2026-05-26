@@ -5,10 +5,18 @@ export const authenticateToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({ message: 'Access token required' });
+    // try to read from cookies header (if httpOnly cookie is used)
+    const cookieHeader = req.headers['cookie'] || '';
+    const match = cookieHeader.match(/(?:^|; )token=([^;]+)/);
+    if (match) {
+      req.token = match[1];
+    }
+    if (!req.token) {
+      return res.status(401).json({ message: 'Access token required' });
+    }
   }
 
-  const decoded = verifyToken(token);
+  const decoded = verifyToken(token || req.token);
   if (!decoded) {
     return res.status(403).json({ message: 'Invalid or expired token' });
   }

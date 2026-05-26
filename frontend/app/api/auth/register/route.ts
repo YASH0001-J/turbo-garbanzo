@@ -28,6 +28,6 @@ export async function POST(request: Request) {
     return jsonSuccess({ token, user }, 'User registered successfully', 201);
   } catch (error) {
     console.error('Register error:', error);
-    return jsonInternalError();
+    return jsonInternalError(error as Error);
   }
 }

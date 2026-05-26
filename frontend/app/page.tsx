@@ -111,13 +111,15 @@ export default function Home() {
           The complete gym management solution for modern gyms
         </p>
         <div className="flex gap-4 justify-center flex-wrap">
-          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+          <Button
+            size="lg"
+            className="border-2 border-white bg-blue-600 text-white hover:bg-blue-700"
+          >
             Start Free Trial
           </Button>
           <Button
             size="lg"
-            variant="outline"
-            className="text-white border-white hover:bg-blue-700"
+            className="border-2 border-white bg-blue-600 text-white hover:bg-blue-700"
           >
             Watch Demo
           </Button>
@@ -176,7 +178,10 @@ export default function Home() {
           Join hundreds of gyms already using ZYM Dashboard
         </p>
         <Link href="/register">
-          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+          <Button
+            size="lg"
+            className="border-2 border-white bg-blue-600 text-white hover:bg-blue-700"
+          >
             Start Free Trial Today
           </Button>
         </Link>

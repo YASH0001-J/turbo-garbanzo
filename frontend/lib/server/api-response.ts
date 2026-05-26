@@ -8,6 +8,8 @@ export function jsonError(message: string, status = 400) {
   return NextResponse.json({ success: false, message }, { status });
 }
 
-export function jsonInternalError() {
-  return jsonError('Internal server error', 500);
+export function jsonInternalError(err?: unknown) {
+  const devMessage =
+    process.env.NODE_ENV !== 'production' && err instanceof Error ? err.message : 'Internal server error';
+  return jsonError(devMessage, 500);
 }

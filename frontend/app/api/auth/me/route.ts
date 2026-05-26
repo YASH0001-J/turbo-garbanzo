@@ -16,6 +16,6 @@ export async function GET(request: Request) {
     return jsonSuccess(user);
   } catch (error) {
     console.error('Get me error:', error);
-    return jsonInternalError();
+    return jsonInternalError(error as Error);
   }
 }

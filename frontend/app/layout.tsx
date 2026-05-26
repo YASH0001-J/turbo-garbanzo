@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ToasterProvider } from "@/components/toaster-provider";
+import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,8 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg-gray-50">
-        <ToasterProvider />
-        {children}
+        <AuthProvider>
+          <ToasterProvider />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

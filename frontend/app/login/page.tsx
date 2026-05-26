@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -7,40 +7,46 @@ import {
   authAPI,
   getErrorMessage,
   isAuthenticated,
-  saveSession,
 } from '@/lib/auth-service';
 import { useEffect, useState, FormEvent, ChangeEvent } from 'react';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/lib/auth-context';
 
 export default function Login() {
   const router = useRouter();
+  const { refetchUser, user, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (!isLoading && user) {
       router.replace('/dashboard');
     }
-  }, [router]);
+  }, [isLoading, user, router]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
+    setSubmitting(true);
 
     try {
-      const auth = await authAPI.login({ email, password });
-      saveSession(auth);
+      await authAPI.login({ email, password });
+      // update auth context from backend/localStorage before navigating
+      try {
+        await refetchUser();
+      } catch (err) {
+        // ignore background verification errors
+      }
       toast.success('Login successful!');
-      router.push('/dashboard');
+      router.replace('/dashboard');
     } catch (err) {
       const message = getErrorMessage(err);
       setError(message);
       toast.error(message);
     } finally {
-      setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -109,8 +115,8 @@ export default function Login() {
             </Link>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? 'Signing in...' : 'Sign In'}
+          <Button type="submit" disabled={submitting} className="w-full">
+            {submitting ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>
 

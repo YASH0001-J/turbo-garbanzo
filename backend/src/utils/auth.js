@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
+const COOKIE_MAX_AGE_MS = Number(process.env.COOKIE_MAX_AGE_MS) || 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // Hash password
 export const hashPassword = async (password) => {
@@ -32,3 +33,5 @@ export const verifyToken = (token) => {
     return null;
   }
 };
+
+export { JWT_EXPIRY, COOKIE_MAX_AGE_MS };

@@ -35,6 +35,6 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error('Login error:', error);
-    return jsonInternalError();
+    return jsonInternalError(error as Error);
   }
 }
