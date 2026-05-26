@@ -1,4 +1,3 @@
-import { createUser, getUserByEmail, getUserById } from '../models/User.js';
 import { comparePassword, generateToken, COOKIE_MAX_AGE_MS } from '../utils/auth.js';
 import { sendSuccess, sendError, handleError } from '../utils/errorHandler.js';
 
@@ -6,6 +5,26 @@ import { sendSuccess, sendError, handleError } from '../utils/errorHandler.js';
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+    // If bypass is enabled, don't use DB — return a mock user
+    if (process.env.BYPASS_DB_AUTH === 'true') {
+      const mockId = `mock-${Date.now()}`;
+      const mockName = name || (email && email.split('@')[0]) || 'Test User';
+      const mockRole = role || process.env.BYPASS_ROLE || 'super_admin';
+      const mockUser = { id: mockId, name: mockName, email, role: mockRole };
+      const token = generateToken(mockUser.id, mockUser.role, { name: mockUser.name, email: mockUser.email });
+
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: COOKIE_MAX_AGE_MS,
+      });
+
+      return sendSuccess(res, { user: mockUser, token }, 'User registered (bypass)', 201);
+    }
+
+    // Otherwise dynamically import model functions to avoid touching DB when bypass is enabled
+    const { getUserByEmail, createUser } = await import('../models/User.js');
 
     // Check if user exists
     const existingUser = await getUserByEmail(email);
@@ -62,7 +81,8 @@ export const loginUser = async (req, res) => {
       return sendSuccess(res, { user: mockUser, token }, 'Login successful (bypass)');
     }
 
-    // Find user
+    // Find user (dynamic import to avoid DB unless needed)
+    const { getUserByEmail } = await import('../models/User.js');
     const user = await getUserByEmail(email);
     if (!user) {
       return sendError(res, 401, 'Invalid email or password');
@@ -101,18 +121,19 @@ export const loginUser = async (req, res) => {
 // Get Current User
 export const getCurrentUser = async (req, res) => {
   try {
-    // If bypassing DB, construct user from token payload
+    // If bypassing DB, construct user from token payload or env
     if (process.env.BYPASS_DB_AUTH === 'true') {
       const userFromToken = req.user || {};
       const mockUser = {
         id: userFromToken.userId || `mock-${Date.now()}`,
         name: userFromToken.name || 'Test User',
         email: userFromToken.email || 'test@example.com',
-        role: userFromToken.role || 'member',
+        role: userFromToken.role || process.env.BYPASS_ROLE || 'super_admin',
       };
       return sendSuccess(res, mockUser);
     }
 
+    const { getUserById } = await import('../models/User.js');
     const user = await getUserById(req.user.userId);
     if (!user) {
       return sendError(res, 404, 'User not found');

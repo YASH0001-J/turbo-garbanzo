@@ -20,7 +20,12 @@ const loginValidation = [
 ];
 
 // Routes
-router.post('/register', registerValidation, handleValidationErrors, registerUser);
+// If BYPASS_DB_AUTH is enabled, skip validation for register as well
+if (process.env.BYPASS_DB_AUTH === 'true') {
+  router.post('/register', registerUser);
+} else {
+  router.post('/register', registerValidation, handleValidationErrors, registerUser);
+}
 // If BYPASS_DB_AUTH is enabled, accept any credentials (skip validation)
 if (process.env.BYPASS_DB_AUTH === 'true') {
   router.post('/login', loginUser);

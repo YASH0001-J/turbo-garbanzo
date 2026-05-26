@@ -1,6 +1,13 @@
 import express from 'express';
 import cors from 'cors';
-import { connectDB } from './config/database.js';
+// connectDB is imported dynamically when DB is enabled to avoid creating
+// a DB pool or attempting connections during bypass testing.
+let connectDB;
+try {
+  // leave undefined here; will import dynamically below when needed
+} catch (e) {
+  // noop
+}
 import apiRoutes from './routes/index.js';
 
 const app = express();
@@ -38,20 +45,26 @@ app.use((err, req, res, next) => {
 
 // Start Server (attempt DB connection but don't crash if unavailable)
 const startServer = async () => {
-  try {
-    const dbOk = await connectDB();
-    if (dbOk) {
-      app.locals.dbConnected = true;
-      console.log('✅ Database connected');
-    } else {
-      app.locals.dbConnected = false;
-      console.warn('⚠️ Database unavailable — continuing without DB.');
-    }
-  } catch (err) {
-    // Unexpected error while attempting to check DB — do not crash the server.
+  if (process.env.BYPASS_DB_AUTH === 'true') {
     app.locals.dbConnected = false;
-    console.warn('⚠️ Unexpected error when checking DB — continuing without DB.');
-    console.warn(err && err.message ? err.message : err);
+    console.log('⚠️ BYPASS_DB_AUTH is enabled — skipping DB connection checks.');
+  } else {
+    try {
+      const dbModule = await import('./config/database.js');
+      connectDB = dbModule.connectDB;
+      const dbOk = await connectDB();
+      if (dbOk) {
+        app.locals.dbConnected = true;
+        console.log('✅ Database connected');
+      } else {
+        app.locals.dbConnected = false;
+        console.warn('⚠️ Database unavailable — continuing without DB.');
+      }
+    } catch (err) {
+      app.locals.dbConnected = false;
+      console.warn('⚠️ Unexpected error when checking DB — continuing without DB.');
+      console.warn(err && err.message ? err.message : err);
+    }
   }
 
   const server = app.listen(PORT, () => {
