@@ -28,9 +28,18 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Internal server error' });
 });
 
-// Start Server (after database is ready)
+// Start Server (attempt DB connection but don't crash if unavailable)
 const startServer = async () => {
-  await connectDB();
+  try {
+    await connectDB();
+    app.locals.dbConnected = true;
+    console.log('✅ Database connected');
+  } catch (err) {
+    // Temporary: do not crash the server if DB is not available (e.g., XAMPP not running)
+    app.locals.dbConnected = false;
+    console.warn('⚠️ Database connection failed — continuing without DB.');
+    console.warn(err && err.message ? err.message : err);
+  }
 
   const server = app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);
